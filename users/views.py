@@ -1,15 +1,9 @@
 import threading
-from array import array
-from datetime import timedelta
 
-from django.core.serializers import serialize
-from rest_framework.generics import RetrieveUpdateAPIView
 
-from users.serializers import VerificationSerializer, UserProfileSerializer
-from django.contrib.auth import authenticate
-from django.shortcuts import render
-from rest_framework.authtoken.models import Token
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from users.serializers import VerificationSerializer, UserProfileSerializer, UsersSerializer
+
+from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import generics, status
@@ -105,3 +99,24 @@ class ProfileView(APIView):
         user = self.request.user
         user.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class SearchView(APIView):
+    queryset = UserModel.objects.all()
+    permission_classes = [IsAdminUser]
+    def get(self, request):
+
+        users= UserModel.objects.all()
+
+        search = request.query_params.get('search')
+        page = int(request.query_params.get('page'))
+        page_size = int(request.query_params.get('page_size', 2))
+        if search:
+            users = users.filter(username__icontains=search)
+        if page:
+            page -=1
+            users = users[page * page_size: page * page_size + page_size]
+        serializer = UsersSerializer(users, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+

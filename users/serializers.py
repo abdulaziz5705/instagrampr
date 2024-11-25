@@ -132,3 +132,11 @@ class ResendCodeSerializer(serializers.Serializer):
         attrs['user'] = user
         return attrs
 
+class UsersSerializer(serializers.Serializer):
+    class Meta:
+        model = UserModel
+        fields = ['id ', 'username', 'first_name', 'last_name', 'phone_number', 'email']
+        extra_kwargs = {
+            'password': {'write_only': True},
+
+        }
